@@ -1,5 +1,8 @@
-aiogram==3.13.1
+aiogram==3.14.0
+beautifulsoup4==4.12.3
+ffmpeg_python==0.2.0
+get_video_properties==0.1.1
 python-dotenv==1.0.1
 Requests==2.32.3
 youthon==0.4.3
-yt_dlp==2024.10.22
+yt_dlp==2024.11.4

@@ -1,12 +1,14 @@
+"""
+All the basic commands
+"""
+
 import os
 
-import youtubesearchpython
 from aiogram import Bot, F, Router, types
 from aiogram.filters import Command
 from dotenv import load_dotenv
 
-import handlers.funcs as funcs
-from keyboards import get_dl_kb, get_results_kb
+from handlers import funcs
 
 router = Router()
 load_dotenv()
@@ -15,42 +17,55 @@ bot = Bot(os.getenv("TOKEN"))
 
 @router.message(F.text, Command("start"))
 async def start(message: types.Message) -> None:
-    await message.answer(text="Напиши название видео для поиска или вставь ссылку.\n\nО боте - /about\nКак пользоваться ботом - /usage")
+    """Start command"""
+    await message.answer(text="Отправь боту ссылку на видео.\nПоддерживаемые ссылки - /supported_links\n\n<b>Мы не собираем никаких данных о Вас!</b>")
 
 
-@router.message(F.text, Command("about"))
-async def faq(message: types.Message) -> None:
-    await message.answer(
-        "Привет! На связи anekobtw. Быстро пройдемся по пунктам.\n\n"
-        "Этот бот - мой польностью <b>сольный проект</b>, что означает, что только я выбираю вектор развития, а также проект не зависит ни от кого, кроме меня.\n\n"
-        "Бот <b>абсолютно бесплатный</b>, и в нем нет и никогда не будет рекламы. Помимо этого, Вы не увидите никаких платных подписок. Проект был создан не с целью заработка, а с целью предоставить людям <b>лучший сервис для скачивания видео и аудио</b>.\n\n"
-        "По причине того, что у меня нет финансирования, я использую бесплатные хостинги, и бот может быть иногда офлайн.\n\n"
-        "<b>Бот не сохраняет никаких данных о Вас.</b> Поэтому доступ к тому, что Вы скачиваете есть только у Вас.\n\n"
-        '(ссылки на "buy me coffee" не будет)',
-        )
-
-
-@router.message(F.text, Command("usage"))
+@router.message(F.text, Command("supported_links"))
 async def usage(message: types.Message) -> None:
+    """Sending a message with all the supported links."""
     await message.answer(
-        "<b>Как скачать видео/песню с ютуба</b>\n\n"
-        "<b>Вариант 1. Ссылкой</b>\n"
-        "Отправь боту ссылку, которая начинается с https://www.youtube.com/watch?v= или https://youtu.be/, и бот вернет информацию о видео с кнопками для скачивания.\n\n"
-        "<b>Вариант 2. Поиском</b>\n"
-        "Отправь боту обычное сообщение и он вернет список видео с таким запросом. После, нажми на название видео, которое хочешь скачать и бот вернет информацию о видео с кнопками для скачивания."
+        """
+<b>YouTube</b>
+https://www.youtube.com/watch?v=
+https://youtu.be/
+https://www.youtube.com/shorts/
+https://youtube.com/shorts/
+
+<b>X (Twitter)</b>
+https://x.com/
+https://twitter.com/
+
+<b>TikTok</b>
+https://www.tiktok.com/
+https://vt.tiktok.com/
+
+<b>Pinterest</b>
+https://www.pinterest.com/pin/
+https://in.pinterest.com/pin/
+"""
     )
 
 
 @router.message(F.text)
 async def message_handler(message: types.Message) -> None:
+    """Handles all text messages by detecting the platform and responding accordingly."""
     await message.delete()
-    url_prefixes = ["https://www.youtube.com/watch?v=", "https://youtu.be/"]
+    uid = message.from_user.id
+    platform = funcs.detect_platform(message.text)
 
-    if any(message.text.startswith(prefix) for prefix in url_prefixes):
-        await message.answer(text=funcs.get_video_info(message.text), reply_markup=get_dl_kb(message.text))
+    platform_cfgs = {"youtube": (funcs.download_yt_video, f"ytvideo - {uid}.mp4", message.answer_video), "x": (funcs.download_x_video, f"xvideo - {uid}.mp4", message.answer_video), "tiktok": (funcs.download_tiktok_video, f"ttvideo - {uid}.mp4", message.answer_video), "pinterest": (funcs.download_pinterest_image, f"pinimage - {uid}.png", message.answer_photo)}
+
+    if platform in platform_cfgs:
+        download_func, fname, send_media = platform_cfgs[platform]
+
+        try:
+            download_func(message.text, fname)
+            file_input = types.FSInputFile(fname)
+            await send_media(file_input, caption="<b>@free_yt_dl_bot</b>")
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}")
+        finally:
+            os.remove(fname)
     else:
-        results = youtubesearchpython.VideosSearch(query=message.text, limit=10)
-        await message.answer(
-            text=f"Видео по запросу <b>{message.text}</b>",
-            reply_markup=get_results_kb(results),
-        )
+        await message.answer(text="Данная ссылка не поддерживается.\nПоддерживаемые ссылки - /supported_links")
