@@ -1,7 +1,3 @@
-"""
-Bot's entrypoint
-"""
-
 import asyncio
 import logging
 import os
@@ -15,13 +11,10 @@ from handlers import router
 
 
 async def run_bot():
-    """Runs the bot"""
     load_dotenv()
-    TOKEN = os.getenv("TOKEN")
+    logging.basicConfig(level=logging.INFO, format="[%(name)s] %(message)s - %(asctime)s", datefmt="%H:%M:%S")
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
+    bot = Bot(token=os.getenv("TOKEN"), default=DefaultBotProperties(parse_mode="HTML"))
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)

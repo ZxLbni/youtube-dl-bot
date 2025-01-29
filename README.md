@@ -1,9 +1,11 @@
-# YouTube downloader bot
-![version](https://img.shields.io/badge/Project_version-2.0.0-blue)
+# YouTube, Instagram, TikTok, X (Twitter) downloader bot
+![version](https://img.shields.io/badge/Project_version-3.0.3-blue)
 ![licence](https://img.shields.io/badge/License-MIT-green)
 ![made with love](https://img.shields.io/badge/Made_with-Love-red)
 
-A telegram bot for downloading YouTube music.
+A telegram bot for downloading videos from YouTube, Instagram, TikTok, X (Twitter)
+
+Use the bot: [@free_yt_dl_bot](https://t.me/free_yt_dl_bot)
 
 ## Run Locally
 ```bash
